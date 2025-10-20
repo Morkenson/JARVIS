@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "custom-oasis-443620-g4",
+  "private_key_id": "3dc432bd0359f48ea935b3160be51a4948eb4fec",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQDB5lRUh7vI9B44\nCdIgo9PDO9woAIFULYotCRfTEyLtXVjv4/pkX3JvIDKJIRoj9FtBf1nSJSHu8zie\nMfNOHdCXP+4X3R/AgYsATphE8uXtx6WNRSx+yZZ0Qt69VGF4Wxiz58ofuhTahD3w\nAjS8TD4xhaclQZWZapjVsKXSZjmjzvdOEwPMrw9KXr7Kx9o0jEpGbV6EJLFMjm7L\ntidRJbDwWkR4WVbdllJ0xUEvUGgqrya8JI9cTLtOQjTZVgyct3gB8sjXfBqCFF9q\nPUmI1QTCTXbQEwpTozCm3FJ3V8eSTnz5otZ6h/6RmIlJd7cLCibFl5EMk2B17U2s\nL3nZ//H5AgMBAAECgf81RWfl0WTGJkt8bzZLwWFsl1rk9+k64fK/F2se582wvkoG\nSPGB92HOe19m+AaL2kE4EsTv90Owt8yA/zguk1e7i3+JDuH/rEIu02kCMw74mjaM\nRB+gCxegLr8DRSuCOto5Pcqfl4AjM4cmFB++Rol6ZuiE/n/F+9isMjFcnLk5R334\nWTeFe30VwAt5/p4ecrp+FrOcygd6SVyb8AUqTejox09F4m+zCJW/PymuMIAykdwQ\n9RFmR3RvEJ/o/1XHnof5sgQqAjcoZPoA4Nb66sNyMEQE3NOmWOiZzR7KNf4AHivT\nAgJ1zfFq7QzxlXbDQCfQ50fHJwcGE9kpgrtfhmUCgYEA7i47iEaVy6LnsdAACqKF\nhxfPgCWtSjASfP8ReELOFmpBWspWNpR7CwN8T5XgtXNLKsML85AuMPYyWnUzLwsV\n/uizSZbN0VHIInY2i0w4Eiwc+4kgboFBe9ETrrHAE90nZaoz/Afv7wsXHWAFYTSH\n8S18wp7/DCcJrnMLgxNl2WMCgYEA0GgBRC/Wf3dHQsBmaAd5XXu32pqOi8BW6uY+\n57SXoj0438k17aEtqBbm/zXhFgJbSIVJ3Tp6ENk0Ccyjyve2LiNXyvyln/Aze87x\neZh+Vfds+yDei2XEYBhbP1hn9uGkpXk+7V6lJvt0zDwRANxmmg2TyE7ir+AZeL1L\nLJUi0/MCgYB/Va40G/Bnju8pi9cJ2HtkjuE7VGlBmVO5CbBwR97f8ux/ul6/DUB+\n0d06uxkISNwtv1r7WuCnAmhHHhNAGkAnKIb5V6svNfa2HdbpP9VWOclA3L2+9lFo\n/Yz1P0g+FmTCoGzsV935QUeZR8V4g1oOIVBqyA/4kkJFxnGoIM25mwKBgCPAo+75\nsfeeE9iMv0S7e4OhFNJoz2mELqUPqN0BKz5G+HnTv++rRfTfMPO5X4ryDozraNeO\nD6DSUk4YEEVip5tUrtwA6bz9bSehQeXVVl8TGlwesG8Dn2PI6eZ9GSDOZvuISFZa\ndUSxwMDE0TnvlZ56E886UUNQ063V846LazUnAoGAW0NidUxX9/k+5YiSKMK/Cjgp\nx7J1DhjL94koVUIsAw7oPRaz4N4xLisaG1aKhrBBltKBDlRFXEn2RML+fUfsXA3x\nNRxVuTQzf5S3N8awLBkN17tp4uPLZOVHQ97Ym31zV3UK8Ga55YVKb9EW37tkVnSX\n/JLgkoJ+nDpSp2Zej8Q=\n-----END PRIVATE KEY-----\n",
+  "client_email": "zachary@custom-oasis-443620-g4.iam.gserviceaccount.com",
+  "client_id": "104130729609657972461",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/zachary%40custom-oasis-443620-g4.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
