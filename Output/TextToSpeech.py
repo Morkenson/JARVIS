@@ -9,30 +9,35 @@ from google.cloud import texttospeech
 
 # Find tts.json relative to executable or script location
 def get_tts_json_path():
-    """Get the path to tts.json, checking bundled location first, then app directory"""
+    """Get the path to tts.json, checking installation directory first"""
     if getattr(sys, 'frozen', False):
-        # Running as compiled executable - check PyInstaller temp folder first
+        # Running as compiled executable - check installation directory first
+        exe_dir = Path(sys.executable).parent  # This is Program Files\Jarvis (installation directory)
+        
+        # Check installation directory first (where installer puts files)
+        installed_path = exe_dir / 'tts.json'
+        if installed_path.exists():
+            return str(installed_path)
+        
+        # Then check PyInstaller temp folder (bundled files)
         meipass = getattr(sys, '_MEIPASS', None)
         if meipass:
-            base_path = Path(meipass)  # Convert string to Path
-        else:
-            base_path = Path(sys.executable).parent
+            bundled_path = Path(meipass) / 'tts.json'
+            if bundled_path.exists():
+                return str(bundled_path)
+        
+        # Fallback to current working directory
+        cwd_path = Path.cwd() / 'tts.json'
+        if cwd_path.exists():
+            return str(cwd_path)
     else:
         # Running as script
         base_path = Path(__file__).parent.parent
+        script_path = base_path / 'tts.json'
+        if script_path.exists():
+            return str(script_path)
     
-    # Check multiple possible locations
-    possible_paths = [
-        base_path / 'tts.json',  # Bundled with executable
-        Path(sys.executable).parent / 'tts.json',  # Same directory as executable
-        Path.cwd() / 'tts.json',  # Current working directory
-    ]
-    
-    for path in possible_paths:
-        if path.exists():
-            return str(path)
-    
-    # Fallback to current directory
+    # Final fallback
     return 'tts.json'
 
 tts_json_path = get_tts_json_path()

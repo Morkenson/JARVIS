@@ -9,21 +9,32 @@ from pathlib import Path
 def get_tts_json_path():
     """Resolve tts.json path in both script and bundled executable modes."""
     if getattr(sys, 'frozen', False):
+        # Running as compiled executable - check installation directory first
+        exe_dir = Path(sys.executable).parent  # This is Program Files\Jarvis (installation directory)
+        
+        # Check installation directory first (where installer puts files)
+        installed_path = exe_dir / 'tts.json'
+        if installed_path.exists():
+            return str(installed_path)
+        
+        # Then check PyInstaller temp folder (bundled files)
         meipass = getattr(sys, '_MEIPASS', None)
         if meipass:
-            base_path = Path(meipass)
-        else:
-            base_path = Path(sys.executable).parent
+            bundled_path = Path(meipass) / 'tts.json'
+            if bundled_path.exists():
+                return str(bundled_path)
+        
+        # Fallback to current working directory
+        cwd_path = Path.cwd() / 'tts.json'
+        if cwd_path.exists():
+            return str(cwd_path)
     else:
-        base_path = Path(__file__).parent.parent  # project root when running from source
-
-    for path in [
-        base_path / 'tts.json',
-        Path(sys.executable).parent / 'tts.json',
-        Path.cwd() / 'tts.json',
-    ]:
-        if path.exists():
-            return str(path)
+        # Running as script
+        base_path = Path(__file__).parent.parent
+        script_path = base_path / 'tts.json'
+        if script_path.exists():
+            return str(script_path)
+    
     return 'tts.json'
 
 
