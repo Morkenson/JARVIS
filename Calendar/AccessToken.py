@@ -3,12 +3,21 @@ import webbrowser
 from datetime import datetime
 import json
 import os
+
 import msal
+from dotenv import load_dotenv
+
+load_dotenv()
 
 GRAPH_API_ENDPOINT = 'https://graph.microsoft.com/v1.0'
-app_id = 'dff42fc5-2077-475b-a344-318ae215d93c'
-scopes = ['Calendars.ReadWrite']
-TENANT_ID = "965e2717-b4fb-43db-ac3e-208999650627"
+APP_ID = os.getenv('MS_GRAPH_CLIENT_ID')
+TENANT_ID = os.getenv("MS_GRAPH_TENANT_ID", "common")
+SCOPES = [scope.strip() for scope in os.getenv("MS_GRAPH_SCOPES", "Calendars.ReadWrite").split(",") if scope.strip()]
+
+if not APP_ID:
+    raise RuntimeError("MS_GRAPH_CLIENT_ID is not set.")
+if not SCOPES:
+    raise RuntimeError("MS_GRAPH_SCOPES must contain at least one scope.")
 
 def generate_access_token():
     # Save Session Token as a token file
@@ -39,15 +48,19 @@ def generate_access_token():
                     access_token_cache = msal.SerializableTokenCache()
 
     # assign a SerializableTokenCache object to the client instance
-    client = msal.PublicClientApplication(client_id=app_id, authority="https://login.microsoftonline.com/common", token_cache=access_token_cache)
+    client = msal.PublicClientApplication(
+        client_id=APP_ID,
+        authority=f"https://login.microsoftonline.com/{TENANT_ID}",
+        token_cache=access_token_cache
+    )
 
     accounts = client.get_accounts()
     if accounts:
         # load the session
-        token_response = client.acquire_token_silent(scopes, accounts[0])
+        token_response = client.acquire_token_silent(SCOPES, accounts[0])
     else:
         # authetnicate your accoutn as usual
-        flow = client.initiate_device_flow(scopes=scopes)
+        flow = client.initiate_device_flow(scopes=SCOPES)
         print("Flow response:", flow)
         #print('user_code: ' + flow['user_code'])
         webbrowser.open('https://microsoft.com/devicelogin')

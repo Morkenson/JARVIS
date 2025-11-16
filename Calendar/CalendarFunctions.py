@@ -1,14 +1,25 @@
+import os
+
+from dotenv import load_dotenv
 from msal import ConfidentialClientApplication
 import requests
+
 import Calendar.AccessToken
 
-CLIENT_ID = "dff42fc5-2077-475b-a344-318ae215d93c"  
-CLIENT_SECRET = "kp.8Q~-OhmGcq4Znnl7~PAkE~YjiFZd_Tjyt0cdW" 
-TENANT_ID = "965e2717-b4fb-43db-ac3e-208999650627"
-AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = "http://localhost"
-SCOPES = ["https://graph.microsoft.com/.default"]
-user_id = "kathymork@outlook.com"
+load_dotenv()
+
+CLIENT_ID = os.getenv("MS_GRAPH_CLIENT_ID")
+CLIENT_SECRET = os.getenv("MS_GRAPH_CLIENT_SECRET")
+TENANT_ID = os.getenv("MS_GRAPH_TENANT_ID", "common")
+AUTHORITY = os.getenv("MS_GRAPH_AUTHORITY", f"https://login.microsoftonline.com/{TENANT_ID}")
+REDIRECT_URI = os.getenv("MS_GRAPH_REDIRECT_URI", "http://localhost")
+SCOPES = os.getenv("MS_GRAPH_APP_SCOPES", "https://graph.microsoft.com/.default").split(",")
+USER_ID = os.getenv("MS_GRAPH_USER_ID")
+
+if not CLIENT_ID or not CLIENT_SECRET:
+    raise RuntimeError("MS_GRAPH_CLIENT_ID and MS_GRAPH_CLIENT_SECRET must be set.")
+if not USER_ID:
+    raise RuntimeError("MS_GRAPH_USER_ID must be set.")
 
 
 def get_calendar_events():

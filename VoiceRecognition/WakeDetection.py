@@ -1,6 +1,6 @@
-import VoiceRecognition1.VoiceProccessing
+import VoiceRecognition.VoiceProccessing
 import Output.TextToSpeech
-import VoiceRecognition1.TextInput
+import VoiceRecognition.TextInput
 
 import pvporcupine
 import pyaudio
@@ -9,7 +9,26 @@ import pygame
 import io
 import os
 
-accessKey = 'SH5jcfy0tx8kUJT9gu84JNqHcW+ewMo+LtSoWDupDLrBlgARHdl4fQ=='
+from dotenv import load_dotenv
+import sys
+
+load_dotenv()
+
+# Try to get Porcupine key from environment, with fallback to bundled key
+accessKey = os.getenv('PORCUPINE_ACCESS_KEY')
+
+# If not found in env and running as executable, use bundled key
+if not accessKey and getattr(sys, 'frozen', False):
+    # Bundled Porcupine access key (exposed for distribution)
+    # Users can override by setting PORCUPINE_ACCESS_KEY in .env
+    accessKey = 'SH5jcfy0tx8kUJT9gu84JNqHcW+ewMo+LtSoWDupDLrBlgARHdl4fQ=='
+
+if not accessKey:
+    raise RuntimeError("PORCUPINE_ACCESS_KEY is not set. Please set it in your .env file.")
+
+POST_WAKE_CAPTURE_SECONDS = float(os.getenv("POST_WAKE_CAPTURE_SECONDS", "2.5"))
+POST_WAKE_SILENCE_FRAMES = int(os.getenv("POST_WAKE_SILENCE_FRAMES", "20"))
+POST_WAKE_SILENCE_THRESHOLD = int(os.getenv("POST_WAKE_SILENCE_THRESHOLD", "120"))
 
 def play_wake_confirmation():
     """Play a confirmation sound when wake word is detected"""
@@ -84,18 +103,34 @@ def wakeDetect():
                     # Play confirmation sound
                     play_wake_confirmation()
 
-                    # Capture audio for processing (e.g., 5 seconds)
+                    # Capture audio for processing (short window, break on silence)
                     print("[INFO] Capturing speech...")
                     frames = []
-                    for _ in range(0, int(porcupine.sample_rate / porcupine.frame_length * 5)):
+                    silence_frames = 0
+                    max_frames = int(porcupine.sample_rate / porcupine.frame_length * POST_WAKE_CAPTURE_SECONDS)
+
+                    for _ in range(max_frames):
                         pcm = stream.read(porcupine.frame_length, exception_on_overflow=False)
-                        frames.append(np.frombuffer(pcm, dtype=np.int16))
+                        frame_array = np.frombuffer(pcm, dtype=np.int16)
+                        frames.append(frame_array)
+
+                        rms = np.sqrt(np.mean(frame_array.astype(np.float32) ** 2))
+                        if rms < POST_WAKE_SILENCE_THRESHOLD:
+                            silence_frames += 1
+                            if silence_frames >= POST_WAKE_SILENCE_FRAMES:
+                                print("[INFO] Post-wake silence detected, stopping capture.")
+                                break
+                        else:
+                            silence_frames = 0
 
                     # Combine audio frames into a single array
+                    if not frames:
+                        continue
+
                     audio_buffer = np.hstack(frames)
 
                     # Pass audio to your speech detection system
-                    return VoiceRecognition1.VoiceProccessing.getInput(audio_buffer)
+                    return VoiceRecognition.VoiceProccessing.getInput(audio_buffer)
 
         except KeyboardInterrupt:
             print("[INFO] Stopping...")
@@ -109,4 +144,4 @@ def wakeDetect():
         print(f"[WARNING] Picovoice wake word detection failed: {e}")
         print("[INFO] Falling back to text input mode...")
         Output.TextToSpeech.speaking("Jarvis at your service sir. Please type your command.")
-        return VoiceRecognition1.TextInput.getTextInput()
+        return VoiceRecognition.TextInput.getTextInput()

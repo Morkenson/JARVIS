@@ -1,0 +1,78 @@
+name: Build Jarvis (Windows)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      - name: Install Inno Setup (iscc)
+        run: |
+          choco install innosetup --yes
+          echo "Inno Setup installed"
+
+      - name: Build executable (PyInstaller)
+        run: |
+          pyinstaller jarvis.spec --noconfirm --clean
+
+      - name: Build Windows installer (Inno Setup)
+        run: |
+          "$Env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" installer.iss
+        shell: pwsh
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-dist-windows
+          path: |
+            dist/**
+            build/jarvis/warn-jarvis.txt
+          if-no-files-found: error
+
+  release-artifact:
+    if: github.event_name == 'release'
+    needs: build-windows
+    runs-on: windows-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: jarvis-dist-windows
+          path: dist
+
+      - name: Zip artifact
+        run: |
+          powershell -Command "Compress-Archive -Path dist/* -DestinationPath jarvis-windows.zip"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            jarvis-windows.zip
+            dist/JarvisSetup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

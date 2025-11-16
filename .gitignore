@@ -1,0 +1,27 @@
+# Virtual environments
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment/config files
+.env
+tts.json
+ms_graph_api_token.json
+.spotify_cache
+
+# Editor and tooling metadata
+.idea/
+.vscode/
+.vs/
+
+# Build artifacts
+build/
+dist/
+*.spec.bak
+*.pyc
+__pycache__/
+*.egg-info/
+

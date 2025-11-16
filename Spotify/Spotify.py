@@ -1,11 +1,20 @@
+import os
+
+from dotenv import load_dotenv
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+
 import Output.TextToSpeech
 
+load_dotenv()
+
 # Spotify API credentials
-SPOTIPY_CLIENT_ID = '7bf5dfa9c12a4d31b82561307d305480'
-SPOTIPY_CLIENT_SECRET = '5e6cff59d17840a2a1ad6d42a51aca99'
-SPOTIPY_REDIRECT_URI = 'http://localhost:8888/callback'
+SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
+SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
+SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI', 'http://localhost:8888/callback')
+
+if not SPOTIPY_CLIENT_ID or not SPOTIPY_CLIENT_SECRET:
+    raise RuntimeError("SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET must be set.")
 
 # Required scopes for full control
 scope = "user-modify-playback-state,user-read-playback-state,user-read-currently-playing,user-library-read,playlist-read-private,playlist-read-collaborative"
@@ -16,7 +25,8 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=scope,
-    cache_path=".spotify_cache"
+    cache_path=".spotify_cache",
+    open_browser=False
 ))
 
 def get_current_playback():

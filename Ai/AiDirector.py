@@ -1,17 +1,17 @@
 from operator import or_
 import Ai.GPTapi
-import VoiceRecognition1.MicInput
+import VoiceRecognition.MicInput
 import Output.TextToSpeech
-import VoiceRecognition1.TextInput
+import VoiceRecognition.TextInput
 import Calendar.CalendarController
 import Spotify.SpotifyController
-import VoiceRecognition1.WakeDetection
+import VoiceRecognition.WakeDetection
 
 def jarvisStart():
     run = True
     
     while run:
-            message = VoiceRecognition1.WakeDetection.wakeDetect()
+            message = VoiceRecognition.WakeDetection.wakeDetect()
             run = messageDetermine(message)
     
     
@@ -33,8 +33,8 @@ def messageDetermine(message):
         
 def activateGPT():
     Output.TextToSpeech.speaking("using chat-gpt sir")
-    response = Ai.GPTapi.getChatGPT(VoiceRecognition1.MicInput.getMicAudio())
-    #response = Ai.GPTapi.getChatGPT(VoiceRecognition1.TextInput.getTextInput())
+    response = Ai.GPTapi.getChatGPT(VoiceRecognition.MicInput.getMicAudio())
+    #response = Ai.GPTapi.getChatGPT(VoiceRecognition.TextInput.getTextInput())
     #print(f"from chatGPT {response}")
     Output.TextToSpeech.speaking(response)
 

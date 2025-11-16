@@ -1,4 +1,4 @@
-import VoiceRecognition1.VoiceProccessing
+import VoiceRecognition.VoiceProccessing
 from Output.TextToSpeech import speaking
 
 import pyaudio
@@ -26,9 +26,9 @@ def getMicAudio():
 
     print("Listening... Speak now!")
     frames = []
-    silence_threshold = 250  # Adjust this value to change sensitivity (lower = more sensitive)
-    silence_duration = 1.5   # Seconds of silence before stopping
-    max_recording_time = 30  # Maximum recording time in seconds
+    silence_threshold = 200  # Lower threshold to detect speech sooner
+    silence_duration = 0.6   # Seconds of silence before stopping
+    max_recording_time = 12  # Maximum recording time in seconds
     
     silence_start = None
     recording_start = time.time()
@@ -67,7 +67,7 @@ def getMicAudio():
 
     audio_data = b''.join(frames)
 
-    return VoiceRecognition1.VoiceProccessing.getInput(audio_data)
+    return VoiceRecognition.VoiceProccessing.getInput(audio_data)
 
     
 

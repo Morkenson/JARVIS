@@ -1,5 +1,6 @@
 import Spotify.Spotify
-import VoiceRecognition1.MicInput
+import VoiceRecognition.MicInput
+import VoiceRecognition.WakeDetection
 import Output.TextToSpeech
 
 def runSpotify():
@@ -8,7 +9,7 @@ def runSpotify():
     
     while True:
         
-        command = VoiceRecognition1.WakeDetection.wakeDetect().lower()
+        command = VoiceRecognition.WakeDetection.wakeDetect().lower()
         Output.TextToSpeech.speaking("Listening")
         
         if not command:
