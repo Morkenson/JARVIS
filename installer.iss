@@ -32,7 +32,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 ; Include the executable and all files from PyInstaller output
 Source: "dist\Jarvis.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\dist\Jarvis.exe'))
 Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists(ExpandConstant('{src}\dist\Jarvis'))
-Source: "tts.json"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\tts.json'))
+Source: "tts.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "env.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 

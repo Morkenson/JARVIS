@@ -36,6 +36,19 @@ jobs:
           choco install innosetup --yes
           echo "Inno Setup installed"
 
+      - name: Verify required files exist
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "tts.json")) {
+            Write-Host "ERROR: tts.json not found in repository!"
+            Write-Host "Current directory: $(Get-Location)"
+            Write-Host "Files in current directory:"
+            Get-ChildItem | Select-Object Name
+            exit 1
+          }
+          Write-Host "✓ tts.json found"
+          Write-Host "File size: $((Get-Item tts.json).Length) bytes"
+
       - name: Build executable (PyInstaller)
         run: |
           pyinstaller jarvis.spec --noconfirm --clean
