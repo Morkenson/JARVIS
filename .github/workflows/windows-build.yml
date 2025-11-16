@@ -56,6 +56,27 @@ jobs:
             build/jarvis/warn-jarvis.txt
           if-no-files-found: error
 
+      - name: Create GitHub Release (Auto)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          body: |
+            Automated build from commit ${{ github.sha }}
+            
+            **Commit:** ${{ github.event.head_commit.message }}
+            **Author:** ${{ github.event.head_commit.author.name }}
+            
+            **Download:** [JarvisSetup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/JarvisSetup.exe)
+          files: |
+            dist/JarvisSetup.exe
+            dist/Jarvis.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   release-artifact:
     if: github.event_name == 'release'
     needs: build-windows
