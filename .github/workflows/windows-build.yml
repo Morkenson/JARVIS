@@ -39,9 +39,13 @@ jobs:
           pyinstaller jarvis.spec --noconfirm --clean
 
       - name: Build Windows installer (Inno Setup)
-        run: |
-          "$Env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" installer.iss
         shell: pwsh
+        run: |
+          $iscc = "${Env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            throw "Inno Setup Compiler not found at $iscc"
+          }
+          & "$iscc" "installer.iss"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
