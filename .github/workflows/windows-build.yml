@@ -36,6 +36,21 @@ jobs:
           choco install innosetup --yes
           echo "Inno Setup installed"
 
+      - name: Get version from version.py
+        shell: pwsh
+        id: get_version
+        run: |
+          # Extract version from version.py
+          $versionContent = Get-Content "version.py" -Raw
+          if ($versionContent -match 'VERSION\s*=\s*"([^"]+)"') {
+            $version = $matches[1]
+            Write-Host "Found version: $version"
+            echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "ERROR: Could not extract version from version.py"
+            exit 1
+          }
+
       - name: Create tts.json from secret
         shell: pwsh
         env:
@@ -76,15 +91,16 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          name: Release v${{ steps.get_version.outputs.VERSION }}
           body: |
             Automated build from commit ${{ github.sha }}
             
+            **Version:** ${{ steps.get_version.outputs.VERSION }}
             **Commit:** ${{ github.event.head_commit.message }}
             **Author:** ${{ github.event.head_commit.author.name }}
             
-            **Download:** [JarvisSetup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/JarvisSetup.exe)
+            **Download:** [JarvisSetup.exe](https://github.com/${{ github.repository }}/releases/download/v${{ steps.get_version.outputs.VERSION }}/JarvisSetup.exe)
           files: |
             dist/JarvisSetup.exe
             dist/Jarvis.exe
