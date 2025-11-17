@@ -40,6 +40,7 @@ a = Analysis(
         'pygame',
         'tkinter',
         'tkinter.filedialog',
+        'customtkinter',
         'GUI',
         'GUI.Onboarding',
         'GUI.Visualizer',

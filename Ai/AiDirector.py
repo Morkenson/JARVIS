@@ -23,7 +23,7 @@ def messageDetermine(message):
         activateCalendar()
     if "music" in message:
         activateSpotify()
-    if "shut" in message or "off" in message or "no" in message or "down" in message:
+    if "shut" in message or "off" in message or "no" in message or "down" in message or "sleep" in message:
         Output.TextToSpeech.speaking("goodbye sir")
         return False
     else:
