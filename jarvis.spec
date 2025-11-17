@@ -10,14 +10,23 @@ import os
 
 block_cipher = None
 
-# Manually collect all Porcupine resource files
+# Manually collect all Porcupine resource files (resources, lib, etc.)
 pvporcupine_dir = os.path.dirname(pvporcupine.__file__)
-resources_path = os.path.join(pvporcupine_dir, 'resources')
 porcupine_resources = []
-if os.path.exists(resources_path):
-    # Walk through all files in resources and add them with correct path structure
-    for root, dirs, files in os.walk(resources_path):
+
+# Collect all files from pvporcupine directory (resources, lib, etc.)
+if os.path.exists(pvporcupine_dir):
+    # Walk through ALL directories in pvporcupine (resources, lib, etc.)
+    for root, dirs, files in os.walk(pvporcupine_dir):
+        # Skip __pycache__ and .py files (they're handled by hiddenimports)
+        if '__pycache__' in root or root.endswith('.py'):
+            continue
+        
         for file in files:
+            # Skip .pyc files
+            if file.endswith('.pyc') or file.endswith('.pyo'):
+                continue
+            
             src_full = os.path.join(root, file)
             # Get relative path from pvporcupine directory
             rel_path = os.path.relpath(src_full, pvporcupine_dir)

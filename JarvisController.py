@@ -42,7 +42,7 @@ def check_for_updates():
         load_dotenv()
         
         # CHANGE THESE to match your GitHub repository
-        repo_owner = os.getenv('GITHUB_REPO_OWNER', 'yourusername')  # Your GitHub username
+        repo_owner = os.getenv('GITHUB_REPO_OWNER', 'Morkenson')  # Your GitHub username
         repo_name = os.getenv('GITHUB_REPO_NAME', 'JARVIS')  # Your repository name
         
         print("[Updater] Checking for updates...")

@@ -140,87 +140,118 @@ def start_visualizer(speaking_event, run_in_thread=False, text_input_callback=No
         mouth_max_inset = 63  # how far inward the mouth can go at peak (scaled for larger circle: 50 * 1.25 ≈ 63)
         phase = 0.0
         speaking_phase_speed = 1.25  # Animation speed when speaking
+        animation_id = None  # Track animation callback ID for cleanup
+        is_destroyed = False  # Track if window is being destroyed
 
         def animate():
-            nonlocal phase
+            nonlocal phase, animation_id
+            
+            # Check if window is being destroyed
+            try:
+                if is_destroyed or not root.winfo_exists():
+                    return
+            except:
+                return
             
             # Skip animation if window is minimized
             try:
                 if root.state() == 'iconic':  # Window is minimized
-                    root.after(100, animate)  # Check less frequently when minimized
+                    if not is_destroyed:
+                        animation_id = root.after(100, animate)  # Check less frequently when minimized
                     return
             except:
                 pass  # Some platforms don't support state()
             
-            canvas.delete("all")
+            try:
+                canvas.delete("all")
 
-            cx = cy = size // 2
+                cx = cy = size // 2
 
-            # Animate at consistent speed while speaking
-            if speaking_event.is_set():
-                phase += speaking_phase_speed
-                inset = (0.5 + 0.5 * math.sin(phase)) * mouth_max_inset
-            else:
-                inset = 0
-
-            # Draw circle as a continuous path that curves inward in bottom-right quadrant
-            # Calculate points along the circle, curving inward for the "mouth" section
-            points = []
-            num_points = 360  # One point per degree for smooth curve
-            
-            # Mouth section: bottom-right quadrant (315° to 45°)
-            mouth_start_angle = 315  # degrees
-            mouth_end_angle = 45  # degrees (wraps around)
-            mouth_span = 90  # degrees
-            
-            for i in range(num_points):
-                angle_deg = (i / num_points) * 360
-                angle_rad = math.radians(angle_deg)
-                
-                # Determine if we're in the mouth section
-                # Handle wrap-around: 315° to 360° and 0° to 45°
-                in_mouth = False
-                if angle_deg >= mouth_start_angle or angle_deg <= mouth_end_angle:
-                    in_mouth = True
-                    # Calculate how far into the mouth section we are (0 to 1)
-                    if angle_deg >= mouth_start_angle:
-                        mouth_progress = (angle_deg - mouth_start_angle) / mouth_span
-                    else:
-                        mouth_progress = (angle_deg + (360 - mouth_start_angle)) / mouth_span
-                    
-                    # Create smooth curve using sine wave for natural transition
-                    curve_factor = math.sin(mouth_progress * math.pi)
-                    current_inset = inset * curve_factor
+                # Animate at consistent speed while speaking
+                if speaking_event.is_set():
+                    phase += speaking_phase_speed
+                    inset = (0.5 + 0.5 * math.sin(phase)) * mouth_max_inset
                 else:
-                    current_inset = 0
-                
-                # Calculate radius at this angle
-                current_radius = R - current_inset
-                
-                # Calculate point on circle
-                x = cx + current_radius * math.cos(angle_rad)
-                y = cy + current_radius * math.sin(angle_rad)
-                points.append((x, y))
-            
-            # Draw the circle as a smooth continuous line (single line with all points)
-            if len(points) > 1:
-                # Flatten points list for create_line (x1, y1, x2, y2, ...)
-                flat_points = []
-                for point in points:
-                    flat_points.extend(point)
-                # Close the circle by adding first point at the end
-                flat_points.extend(points[0])
-                
-                # Draw as single smooth line for better performance
-                canvas.create_line(
-                    *flat_points,
-                    fill=fg, width=border_w, smooth=True, 
-                    capstyle=tk.ROUND, joinstyle=tk.ROUND, splinesteps=36
-                )
+                    inset = 0
 
-            root.after(33, animate)  # ~30 FPS
+                # Draw circle as a continuous path that curves inward in bottom-right quadrant
+                # Calculate points along the circle, curving inward for the "mouth" section
+                points = []
+                num_points = 360  # One point per degree for smooth curve
+                
+                # Mouth section: bottom-right quadrant (315° to 45°)
+                mouth_start_angle = 315  # degrees
+                mouth_end_angle = 45  # degrees (wraps around)
+                mouth_span = 90  # degrees
+                
+                for i in range(num_points):
+                    angle_deg = (i / num_points) * 360
+                    angle_rad = math.radians(angle_deg)
+                    
+                    # Determine if we're in the mouth section
+                    # Handle wrap-around: 315° to 360° and 0° to 45°
+                    in_mouth = False
+                    if angle_deg >= mouth_start_angle or angle_deg <= mouth_end_angle:
+                        in_mouth = True
+                        # Calculate how far into the mouth section we are (0 to 1)
+                        if angle_deg >= mouth_start_angle:
+                            mouth_progress = (angle_deg - mouth_start_angle) / mouth_span
+                        else:
+                            mouth_progress = (angle_deg + (360 - mouth_start_angle)) / mouth_span
+                        
+                        # Create smooth curve using sine wave for natural transition
+                        curve_factor = math.sin(mouth_progress * math.pi)
+                        current_inset = inset * curve_factor
+                    else:
+                        current_inset = 0
+                    
+                    # Calculate radius at this angle
+                    current_radius = R - current_inset
+                    
+                    # Calculate point on circle
+                    x = cx + current_radius * math.cos(angle_rad)
+                    y = cy + current_radius * math.sin(angle_rad)
+                    points.append((x, y))
+                
+                # Draw the circle as a smooth continuous line (single line with all points)
+                if len(points) > 1:
+                    # Flatten points list for create_line (x1, y1, x2, y2, ...)
+                    flat_points = []
+                    for point in points:
+                        flat_points.extend(point)
+                    # Close the circle by adding first point at the end
+                    flat_points.extend(points[0])
+                    
+                    # Draw as single smooth line for better performance
+                    canvas.create_line(
+                        *flat_points,
+                        fill=fg, width=border_w, smooth=True, 
+                        capstyle=tk.ROUND, joinstyle=tk.ROUND, splinesteps=36
+                    )
 
-        root.after(0, animate)
+                # Schedule next frame only if window still exists
+                if not is_destroyed:
+                    animation_id = root.after(33, animate)  # ~30 FPS
+            except tk.TclError:
+                # Window was destroyed, stop animation
+                pass
+
+        def on_closing():
+            """Handle window closing - cancel animation callbacks"""
+            nonlocal is_destroyed, animation_id
+            is_destroyed = True
+            if animation_id:
+                try:
+                    root.after_cancel(animation_id)
+                except:
+                    pass
+            root.destroy()
+
+        # Bind close event
+        root.protocol("WM_DELETE_WINDOW", on_closing)
+        
+        # Start animation
+        animation_id = root.after(0, animate)
         return root
 
     if run_in_thread:
