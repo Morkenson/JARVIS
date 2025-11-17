@@ -4,6 +4,7 @@ import tkinter as tk
 import customtkinter as ctk
 import Output.TextToSpeech
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -12,13 +13,57 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
+def get_env_file_path():
+    """Get the path to the .env file.
+    
+    When running as executable, saves to user's AppData directory.
+    When running as script, saves to project root.
+    """
+    if getattr(sys, 'frozen', False):
+        # Running as executable - use user's AppData directory
+        appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+        jarvis_config_dir = appdata_dir / 'Jarvis'
+        jarvis_config_dir.mkdir(exist_ok=True)  # Create directory if it doesn't exist
+        return jarvis_config_dir / '.env'
+    else:
+        # Running as script - use project root
+        app_dir = Path(__file__).parent.parent
+        return app_dir / '.env'
+
+
+def load_env_file():
+    """Load .env file from appropriate location (checks both AppData and installation directory)"""
+    if getattr(sys, 'frozen', False):
+        # Check AppData first (where we save)
+        appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+        appdata_env = appdata_dir / 'Jarvis' / '.env'
+        if appdata_env.exists():
+            load_dotenv(appdata_env)
+            return
+        # Fallback to installation directory
+        install_env = Path(sys.executable).parent / '.env'
+        if install_env.exists():
+            load_dotenv(install_env)
+    else:
+        # Running as script - check project root
+        app_dir = Path(__file__).parent.parent
+        env_path = app_dir / ".env"
+        if env_path.exists():
+            load_dotenv(env_path)
+        else:
+            load_dotenv()  # Default behavior
+
+
 def check_integration_status():
     """Check the connection status of all integrations"""
-    # Load .env file
-    app_dir = Path(__file__).parent.parent
-    env_path = app_dir / ".env"
-    if env_path.exists():
-        load_dotenv(env_path)
+    # Load .env file from appropriate location
+    load_env_file()
+    
+    # Get app directory for cache/token files
+    if getattr(sys, 'frozen', False):
+        app_dir = Path(sys.executable).parent
+    else:
+        app_dir = Path(__file__).parent.parent
     
     status = {}
     
@@ -32,7 +77,14 @@ def check_integration_status():
     # Check Spotify
     spotify_id = os.getenv('SPOTIPY_CLIENT_ID', '')
     spotify_secret = os.getenv('SPOTIPY_CLIENT_SECRET', '')
-    spotify_cache = app_dir / '.spotify_cache'
+    # Check cache in both AppData and installation directory
+    if getattr(sys, 'frozen', False):
+        appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+        spotify_cache = appdata_dir / 'Jarvis' / '.spotify_cache'
+        if not spotify_cache.exists():
+            spotify_cache = app_dir / '.spotify_cache'
+    else:
+        spotify_cache = app_dir / '.spotify_cache'
     status['spotify'] = {
         'connected': bool(spotify_id and spotify_secret and 
                         spotify_id != 'your-spotify-client-id' and 
@@ -45,7 +97,14 @@ def check_integration_status():
     ms_client_id = os.getenv('MS_GRAPH_CLIENT_ID', '')
     ms_client_secret = os.getenv('MS_GRAPH_CLIENT_SECRET', '')
     ms_user_id = os.getenv('MS_GRAPH_USER_ID', '')
-    ms_token = app_dir / 'ms_graph_api_token.json'
+    # Check token in both AppData and installation directory
+    if getattr(sys, 'frozen', False):
+        appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+        ms_token = appdata_dir / 'Jarvis' / 'ms_graph_api_token.json'
+        if not ms_token.exists():
+            ms_token = app_dir / 'ms_graph_api_token.json'
+    else:
+        ms_token = app_dir / 'ms_graph_api_token.json'
     status['microsoft'] = {
         'connected': bool(ms_client_id and ms_client_secret and ms_user_id and
                         ms_client_id != 'your-azure-app-client-id' and
@@ -206,8 +265,7 @@ def start_visualizer(speaking_event, run_in_thread=False, text_input_callback=No
         
         def connect_integration(integration_key):
             """Connect an integration"""
-            app_dir = Path(__file__).parent.parent
-            env_path = app_dir / ".env"
+            env_path = get_env_file_path()
             
             if integration_key == 'openai':
                 # Open a dialog to enter OpenAI API key
@@ -237,26 +295,45 @@ def start_visualizer(speaking_event, run_in_thread=False, text_input_callback=No
         
         def disconnect_integration(integration_key):
             """Disconnect an integration"""
-            app_dir = Path(__file__).parent.parent
+            # Get app directory for cache/token files
+            if getattr(sys, 'frozen', False):
+                app_dir = Path(sys.executable).parent
+            else:
+                app_dir = Path(__file__).parent.parent
             
             if integration_key == 'openai':
                 # Remove OpenAI key from .env
-                env_path = app_dir / ".env"
+                env_path = get_env_file_path()
                 if env_path.exists():
-                    lines = env_path.read_text().splitlines()
-                    new_lines = []
-                    for line in lines:
-                        if not line.strip().startswith('OPENAI_API_KEY='):
-                            new_lines.append(line)
-                    env_path.write_text("\n".join(new_lines) + "\n")
+                    try:
+                        lines = env_path.read_text(encoding='utf-8').splitlines()
+                        new_lines = []
+                        for line in lines:
+                            if not line.strip().startswith('OPENAI_API_KEY='):
+                                new_lines.append(line)
+                        env_path.write_text("\n".join(new_lines) + "\n", encoding='utf-8')
+                    except Exception as e:
+                        print(f"Error removing OpenAI key: {e}")
             elif integration_key == 'spotify':
-                # Remove Spotify cache
-                cache_path = app_dir / '.spotify_cache'
+                # Remove Spotify cache (check both AppData and installation directory)
+                if getattr(sys, 'frozen', False):
+                    appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+                    cache_path = appdata_dir / 'Jarvis' / '.spotify_cache'
+                    if not cache_path.exists():
+                        cache_path = app_dir / '.spotify_cache'
+                else:
+                    cache_path = app_dir / '.spotify_cache'
                 if cache_path.exists():
                     cache_path.unlink()
             elif integration_key == 'microsoft':
-                # Remove Microsoft token
-                token_path = app_dir / 'ms_graph_api_token.json'
+                # Remove Microsoft token (check both AppData and installation directory)
+                if getattr(sys, 'frozen', False):
+                    appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+                    token_path = appdata_dir / 'Jarvis' / 'ms_graph_api_token.json'
+                    if not token_path.exists():
+                        token_path = app_dir / 'ms_graph_api_token.json'
+                else:
+                    token_path = app_dir / 'ms_graph_api_token.json'
                 if token_path.exists():
                     token_path.unlink()
 

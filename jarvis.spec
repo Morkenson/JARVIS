@@ -10,44 +10,7 @@ import os
 
 block_cipher = None
 
-# Manually collect Porcupine data files (resources, lib/common params, etc.)
-# Note: .so/.dll files are handled by collect_dynamic_libs, so we skip them here
-pvporcupine_dir = os.path.dirname(pvporcupine.__file__)
 porcupine_resources = []
-
-# Collect data files from pvporcupine directory
-if os.path.exists(pvporcupine_dir):
-    # Walk through directories in pvporcupine
-    for root, dirs, files in os.walk(pvporcupine_dir):
-        # Skip __pycache__ directories
-        if '__pycache__' in root:
-            continue
-        
-        for file in files:
-            src_full = os.path.join(root, file)
-            
-            # Skip if it's actually a directory (check first)
-            if not os.path.isfile(src_full):
-                continue
-            
-            # Skip .pyc, .pyo files
-            if file.endswith('.pyc') or file.endswith('.pyo'):
-                continue
-            
-            # Skip .so, .dll, .dylib files (handled by collect_dynamic_libs)
-            if file.endswith(('.so', '.dll', '.dylib')):
-                continue
-            
-            # Skip .py files (handled by hiddenimports)
-            if file.endswith('.py'):
-                continue
-            
-            # Get relative path from pvporcupine directory
-            rel_path = os.path.relpath(src_full, pvporcupine_dir)
-            # PyInstaller format: (source_full_path, dest_relative_path)
-            # Use forward slashes for dest path (PyInstaller will handle conversion)
-            dest_rel = os.path.join('pvporcupine', rel_path).replace('\\', '/')
-            porcupine_resources.append((src_full, dest_rel))
 
 a = Analysis(
     ['JarvisController.py'],
@@ -86,7 +49,7 @@ a = Analysis(
         'requests',
         'GUI.UpdateDialog',
     ],
-    hookspath=[],  # Removed to avoid conflicts with custom hook
+    hookspath=['.'],  # Use custom hook for pvporcupine
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],

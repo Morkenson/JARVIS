@@ -4,10 +4,29 @@ import tkinter as tk
 from tkinter import messagebox
 import customtkinter as ctk
 from pathlib import Path
+import sys
 
 # Configure CustomTkinter appearance
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
+
+
+def get_env_file_path():
+    """Get the path to the .env file.
+    
+    When running as executable, saves to user's AppData directory.
+    When running as script, saves to project root.
+    """
+    if getattr(sys, 'frozen', False):
+        # Running as executable - use user's AppData directory
+        appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+        jarvis_config_dir = appdata_dir / 'Jarvis'
+        jarvis_config_dir.mkdir(exist_ok=True)  # Create directory if it doesn't exist
+        return jarvis_config_dir / '.env'
+    else:
+        # Running as script - use project root
+        app_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent
+        return app_dir / '.env'
 
 
 def start_onboarding_async(speaking_event) -> threading.Event:
@@ -206,16 +225,8 @@ def start_onboarding_ui(speaking_event, on_ready, test_mode=False) -> None:
             # Test mode: don't save, just show a message
             messagebox.showinfo("Test Mode", "Test mode enabled - no changes were saved to .env")
         else:
-            # Save to .env - use more robust path resolution
-            import sys
-            if getattr(sys, 'frozen', False):
-                # Running as executable
-                app_dir = Path(sys.executable).parent
-            else:
-                # Running as script
-                app_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent
-            
-            env_path = app_dir / ".env"
+            # Save to .env using the helper function
+            env_path = get_env_file_path()
             existing = {}
             if env_path.exists():
                 for line in env_path.read_text(encoding='utf-8').splitlines():
@@ -227,7 +238,7 @@ def start_onboarding_ui(speaking_event, on_ready, test_mode=False) -> None:
             # Write with proper encoding
             try:
                 env_path.write_text("\n".join(f"{k}={v}" for k, v in existing.items()) + "\n", encoding='utf-8')
-                messagebox.showinfo("Success", "OpenAI API key saved successfully!")
+                messagebox.showinfo("Success", f"OpenAI API key saved successfully!\n\nLocation: {env_path}")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save API key:\n{e}")
                 return

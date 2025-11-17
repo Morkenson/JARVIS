@@ -27,13 +27,17 @@ if os.path.exists(resources_path):
             src_full = os.path.join(root, file)
             # Preserve directory structure relative to pvporcupine package
             rel_path = os.path.relpath(src_full, pvporcupine_dir)
-            # Destination path uses backslashes on Windows (PyInstaller format)
-            dest_rel = os.path.join('pvporcupine', rel_path)
+            # Destination path should be a directory, not include the filename
+            rel_dir = os.path.dirname(rel_path)
+            if rel_dir:
+                dest_rel = os.path.join('pvporcupine', rel_dir)
+            else:
+                dest_rel = 'pvporcupine'
             normalized_dest = dest_rel.replace('\\', '/').lower()
             
             # Only add if not already in datas
             if normalized_dest not in existing_dests:
-                # PyInstaller format: (source_full_path, dest_relative_path)
+                # PyInstaller format: (source_full_path, dest_directory)
                 datas.append((src_full, dest_rel))
                 existing_dests.add(normalized_dest)
 

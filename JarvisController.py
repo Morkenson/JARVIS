@@ -3,6 +3,7 @@
 import SetupWizard
 import threading
 import sys
+import os
 import Output.TextToSpeech
 import VoiceRecognition.MicInput
 import Ai.AiDirector
@@ -10,6 +11,8 @@ import VoiceRecognition.TextInput
 import VoiceRecognition.WakeDetection
 from GUI.Visualizer import start_visualizer
 from GUI.Onboarding import start_onboarding_ui
+from pathlib import Path
+from dotenv import load_dotenv
 
 # Add updater import
 try:
@@ -19,6 +22,24 @@ try:
 except ImportError as e:
     UPDATER_AVAILABLE = False
     print(f"[Warning] Updater module not available: {e}")
+
+
+def load_env_file():
+    """Load .env file from appropriate location (checks both AppData and installation directory)"""
+    if getattr(sys, 'frozen', False):
+        # Check AppData first (where we save)
+        appdata_dir = Path(os.getenv('APPDATA', os.path.expanduser('~')))
+        appdata_env = appdata_dir / 'Jarvis' / '.env'
+        if appdata_env.exists():
+            load_dotenv(appdata_env)
+            return
+        # Fallback to installation directory
+        install_env = Path(sys.executable).parent / '.env'
+        if install_env.exists():
+            load_dotenv(install_env)
+    else:
+        # Running as script - use default behavior
+        load_dotenv()
 
 
 def check_for_updates():
@@ -37,9 +58,7 @@ def check_for_updates():
     try:
         # Configure your GitHub repository information here
         # Or set GITHUB_REPO_OWNER and GITHUB_REPO_NAME in .env file
-        import os
-        from dotenv import load_dotenv
-        load_dotenv()
+        load_env_file()
         
         # CHANGE THESE to match your GitHub repository
         repo_owner = os.getenv('GITHUB_REPO_OWNER', 'Morkenson')  # Your GitHub username
