@@ -10,6 +10,7 @@ __pycache__/
 .env
 ms_graph_api_token.json
 .spotify_cache
+tts.json
 
 # Editor and tooling metadata
 .idea/

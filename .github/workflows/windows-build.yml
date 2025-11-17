@@ -36,17 +36,18 @@ jobs:
           choco install innosetup --yes
           echo "Inno Setup installed"
 
-      - name: Verify required files exist
+      - name: Create tts.json from secret
         shell: pwsh
+        env:
+          TTS_JSON_CONTENT: ${{ secrets.TTS_JSON_CONTENT }}
         run: |
-          if (-not (Test-Path "tts.json")) {
-            Write-Host "ERROR: tts.json not found in repository!"
-            Write-Host "Current directory: $(Get-Location)"
-            Write-Host "Files in current directory:"
-            Get-ChildItem | Select-Object Name
+          if (-not $env:TTS_JSON_CONTENT) {
+            Write-Host "ERROR: TTS_JSON_CONTENT secret not found!"
+            Write-Host "Please add TTS_JSON_CONTENT secret to your repository settings."
             exit 1
           }
-          Write-Host "✓ tts.json found"
+          $env:TTS_JSON_CONTENT | Out-File -FilePath "tts.json" -Encoding utf8 -NoNewline
+          Write-Host "✓ tts.json created from secret"
           Write-Host "File size: $((Get-Item tts.json).Length) bytes"
 
       - name: Build executable (PyInstaller)
