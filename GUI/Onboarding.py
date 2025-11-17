@@ -206,17 +206,31 @@ def start_onboarding_ui(speaking_event, on_ready, test_mode=False) -> None:
             # Test mode: don't save, just show a message
             messagebox.showinfo("Test Mode", "Test mode enabled - no changes were saved to .env")
         else:
-            # Save to .env
-            app_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent
+            # Save to .env - use more robust path resolution
+            import sys
+            if getattr(sys, 'frozen', False):
+                # Running as executable
+                app_dir = Path(sys.executable).parent
+            else:
+                # Running as script
+                app_dir = Path(os.path.dirname(os.path.abspath(__file__))).parent
+            
             env_path = app_dir / ".env"
             existing = {}
             if env_path.exists():
-                for line in env_path.read_text().splitlines():
+                for line in env_path.read_text(encoding='utf-8').splitlines():
                     if "=" in line and not line.strip().startswith("#"):
                         k, v = line.split("=", 1)
                         existing[k.strip()] = v.strip()
             existing["OPENAI_API_KEY"] = key
-            env_path.write_text("\n".join(f"{k}={v}" for k, v in existing.items()) + "\n")
+            
+            # Write with proper encoding
+            try:
+                env_path.write_text("\n".join(f"{k}={v}" for k, v in existing.items()) + "\n", encoding='utf-8')
+                messagebox.showinfo("Success", "OpenAI API key saved successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to save API key:\n{e}")
+                return
 
         # Call the ready callback first
         try:

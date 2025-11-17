@@ -3,10 +3,59 @@ import threading
 import tkinter as tk
 import customtkinter as ctk
 import Output.TextToSpeech
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 # Configure CustomTkinter appearance
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
+
+
+def check_integration_status():
+    """Check the connection status of all integrations"""
+    # Load .env file
+    app_dir = Path(__file__).parent.parent
+    env_path = app_dir / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+    
+    status = {}
+    
+    # Check OpenAI
+    openai_key = os.getenv('OPENAI_API_KEY', '')
+    status['openai'] = {
+        'connected': bool(openai_key and openai_key.strip() and openai_key != 'your-openai-api-key-here'),
+        'name': 'OpenAI'
+    }
+    
+    # Check Spotify
+    spotify_id = os.getenv('SPOTIPY_CLIENT_ID', '')
+    spotify_secret = os.getenv('SPOTIPY_CLIENT_SECRET', '')
+    spotify_cache = app_dir / '.spotify_cache'
+    status['spotify'] = {
+        'connected': bool(spotify_id and spotify_secret and 
+                        spotify_id != 'your-spotify-client-id' and 
+                        spotify_secret != 'your-spotify-client-secret' and
+                        spotify_cache.exists()),
+        'name': 'Spotify'
+    }
+    
+    # Check Microsoft Calendar
+    ms_client_id = os.getenv('MS_GRAPH_CLIENT_ID', '')
+    ms_client_secret = os.getenv('MS_GRAPH_CLIENT_SECRET', '')
+    ms_user_id = os.getenv('MS_GRAPH_USER_ID', '')
+    ms_token = app_dir / 'ms_graph_api_token.json'
+    status['microsoft'] = {
+        'connected': bool(ms_client_id and ms_client_secret and ms_user_id and
+                        ms_client_id != 'your-azure-app-client-id' and
+                        ms_client_secret != 'your-azure-app-client-secret' and
+                        ms_user_id != 'your-email@domain.com' and
+                        ms_token.exists()),
+        'name': 'Microsoft Calendar'
+    }
+    
+    return status
 
 
 def start_visualizer(speaking_event, run_in_thread=False, text_input_callback=None):
@@ -54,6 +103,162 @@ def start_visualizer(speaking_event, run_in_thread=False, text_input_callback=No
         # Create a frame to hold the canvas - fill entire window and center content
         canvas_frame = ctk.CTkFrame(root, fg_color="transparent")
         canvas_frame.pack(fill="both", expand=True)
+        
+        # Integrations dropdown menu in top left
+        integrations_menu_visible = False
+        
+        def toggle_integrations_menu():
+            """Toggle the integrations menu visibility"""
+            nonlocal integrations_menu_visible
+            if integrations_menu_visible:
+                integrations_panel.place_forget()
+                integrations_menu_visible = False
+            else:
+                integrations_panel.place(x=10, y=50)  # Below the button
+                integrations_menu_visible = True
+                refresh_integrations_status()
+        
+        # Integrations button (top left)
+        integrations_btn = ctk.CTkButton(
+            root,
+            text="Integrations",
+            command=toggle_integrations_menu,
+            width=120,
+            height=35,
+            font=ctk.CTkFont(size=13, weight="bold"),
+            fg_color=("gray70", "gray30"),
+            hover_color=("gray80", "gray40")
+        )
+        integrations_btn.place(x=10, y=10)
+        
+        # Integrations panel (initially hidden, positioned top left)
+        integrations_panel = ctk.CTkFrame(root, width=350, height=400, fg_color=("gray20", "gray15"))
+        integrations_panel.pack_propagate(False)
+        # Don't pack initially - will be shown when button is clicked
+        
+        # Title
+        title_label = ctk.CTkLabel(
+            integrations_panel,
+            text="Integrations",
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        title_label.pack(pady=(15, 10))
+        
+        # Integration items container
+        integrations_container = ctk.CTkScrollableFrame(integrations_panel, fg_color="transparent")
+        integrations_container.pack(fill="both", expand=True, padx=15, pady=10)
+        
+        def refresh_integrations_status():
+            """Refresh and display integration status"""
+            # Clear existing items
+            for widget in integrations_container.winfo_children():
+                widget.destroy()
+            
+            status = check_integration_status()
+            
+            # Create integration items
+            for key, info in status.items():
+                item_frame = ctk.CTkFrame(integrations_container, fg_color=("gray25", "gray20"))
+                item_frame.pack(fill="x", pady=8, padx=5)
+                
+                # Name and status
+                name_status_frame = ctk.CTkFrame(item_frame, fg_color="transparent")
+                name_status_frame.pack(fill="x", padx=10, pady=8)
+                
+                name_label = ctk.CTkLabel(
+                    name_status_frame,
+                    text=info['name'],
+                    font=ctk.CTkFont(size=14, weight="bold")
+                )
+                name_label.pack(side="left")
+                
+                # Status indicator
+                status_color = "#23d160" if info['connected'] else "#ff4444"
+                status_text = "Connected" if info['connected'] else "Not Connected"
+                status_label = ctk.CTkLabel(
+                    name_status_frame,
+                    text=status_text,
+                    font=ctk.CTkFont(size=12),
+                    text_color=status_color
+                )
+                status_label.pack(side="right")
+                
+                # Connect/Disconnect button
+                def make_action_handler(integration_key):
+                    def handler():
+                        if status[integration_key]['connected']:
+                            disconnect_integration(integration_key)
+                        else:
+                            connect_integration(integration_key)
+                        refresh_integrations_status()
+                    return handler
+                
+                action_btn = ctk.CTkButton(
+                    item_frame,
+                    text="Disconnect" if info['connected'] else "Connect",
+                    command=make_action_handler(key),
+                    width=120,
+                    height=30,
+                    font=ctk.CTkFont(size=12),
+                    fg_color=("#ff4444", "#cc3333") if info['connected'] else ("#23d160", "#1ea850")
+                )
+                action_btn.pack(pady=(0, 8))
+        
+        def connect_integration(integration_key):
+            """Connect an integration"""
+            app_dir = Path(__file__).parent.parent
+            env_path = app_dir / ".env"
+            
+            if integration_key == 'openai':
+                # Open a dialog to enter OpenAI API key
+                from GUI.Onboarding import start_onboarding_ui
+                def on_ready():
+                    pass
+                # This is blocking - waits for user to save
+                start_onboarding_ui(speaking_event, on_ready, test_mode=False)
+                # After onboarding closes, refresh the integrations status
+                if integrations_menu_visible:
+                    refresh_integrations_status()
+            elif integration_key == 'spotify':
+                # Trigger Spotify authorization
+                try:
+                    import Spotify.Spotify
+                    # Spotify will need to authenticate - this will open browser
+                    threading.Thread(target=lambda: Spotify.Spotify.get_available_devices(), daemon=True).start()
+                except Exception as e:
+                    print(f"Error connecting Spotify: {e}")
+            elif integration_key == 'microsoft':
+                # Trigger Microsoft Calendar authorization
+                try:
+                    from Calendar import AccessToken
+                    threading.Thread(target=lambda: AccessToken.generate_access_token(), daemon=True).start()
+                except Exception as e:
+                    print(f"Error connecting Microsoft Calendar: {e}")
+        
+        def disconnect_integration(integration_key):
+            """Disconnect an integration"""
+            app_dir = Path(__file__).parent.parent
+            
+            if integration_key == 'openai':
+                # Remove OpenAI key from .env
+                env_path = app_dir / ".env"
+                if env_path.exists():
+                    lines = env_path.read_text().splitlines()
+                    new_lines = []
+                    for line in lines:
+                        if not line.strip().startswith('OPENAI_API_KEY='):
+                            new_lines.append(line)
+                    env_path.write_text("\n".join(new_lines) + "\n")
+            elif integration_key == 'spotify':
+                # Remove Spotify cache
+                cache_path = app_dir / '.spotify_cache'
+                if cache_path.exists():
+                    cache_path.unlink()
+            elif integration_key == 'microsoft':
+                # Remove Microsoft token
+                token_path = app_dir / 'ms_graph_api_token.json'
+                if token_path.exists():
+                    token_path.unlink()
 
         # Container for circle and text input (centered both horizontally and vertically)
         center_container = ctk.CTkFrame(canvas_frame, fg_color="transparent")

@@ -19,7 +19,7 @@ def jarvisStart():
 def messageDetermine(message):
     if "gpt" in message or "chat" in message:
         activateGPT()
-    if "calendar" in message or "schedule" in message:
+    if "calendar" in message or "schedule" in message or "meeting" in message:
         activateCalendar()
     if "music" in message:
         activateSpotify()
