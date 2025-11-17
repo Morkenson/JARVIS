@@ -29,9 +29,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
-; Include the executable and all files from PyInstaller output
-Source: "dist\Jarvis.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\dist\Jarvis.exe'))
-Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: DirExists(ExpandConstant('{src}\dist\Jarvis'))
+; Include the executable
+Source: "dist\Jarvis.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+; Include all files from dist directory (works for both one-file and one-dir builds)
+Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; Additional files
 Source: "tts.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "env.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme

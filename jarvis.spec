@@ -1,8 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
+from PyInstaller.utils.hooks import (
+    collect_data_files,
+    collect_dynamic_libs,
+    collect_submodules,
+)
+import pvporcupine
+import os
 
 block_cipher = None
+
+# Manually collect all Porcupine resource files
+pvporcupine_dir = os.path.dirname(pvporcupine.__file__)
+resources_path = os.path.join(pvporcupine_dir, 'resources')
+porcupine_resources = []
+if os.path.exists(resources_path):
+    # Walk through all files in resources and add them with correct path structure
+    for root, dirs, files in os.walk(resources_path):
+        for file in files:
+            src_full = os.path.join(root, file)
+            # Get relative path from pvporcupine directory
+            rel_path = os.path.relpath(src_full, pvporcupine_dir)
+            # PyInstaller format: (source_full_path, dest_relative_path)
+            # Use forward slashes for dest path (PyInstaller will handle conversion)
+            dest_rel = os.path.join('pvporcupine', rel_path).replace('\\', '/')
+            porcupine_resources.append((src_full, dest_rel))
 
 a = Analysis(
     ['JarvisController.py'],
@@ -11,8 +33,7 @@ a = Analysis(
     datas=[
         ('env.example', '.'),
         ('tts.json', '.'),  # Bundle Google Cloud TTS credentials
-    ] + collect_data_files('pvporcupine') \
-      + collect_data_files('GUI', includes=['*.py']),
+    ] + porcupine_resources + collect_data_files('GUI', includes=['*.py']),
     hiddenimports=[
         'pyaudio',
         'pvporcupine',
@@ -37,7 +58,7 @@ a = Analysis(
         'SetupWizard',
         'pathlib',
     ],
-    hookspath=[],
+    hookspath=[],  # Removed to avoid conflicts with custom hook
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
@@ -71,4 +92,3 @@ exe = EXE(
     entitlements_file=None,
     icon=None,
 )
-
