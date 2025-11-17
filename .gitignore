@@ -11,6 +11,7 @@ __pycache__/
 ms_graph_api_token.json
 .spotify_cache
 tts.json
+.porcupine_key
 
 # Editor and tooling metadata
 .idea/

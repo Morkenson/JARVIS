@@ -37,6 +37,7 @@ Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createal
 
 ; Additional files
 Source: "tts.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".porcupine_key"; DestDir: "{app}"; Flags: ignoreversion
 Source: "env.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "version.py"; DestDir: "{app}"; Flags: ignoreversion

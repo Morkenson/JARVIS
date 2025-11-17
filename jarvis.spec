@@ -19,6 +19,7 @@ a = Analysis(
     datas=[
         ('env.example', '.'),
         ('tts.json', '.'),  # Bundle Google Cloud TTS credentials
+        ('.porcupine_key', '.'),  # Bundle Porcupine access key file
     ] + porcupine_resources + collect_data_files('GUI', includes=['*.py']),
     hiddenimports=[
         'pyaudio',

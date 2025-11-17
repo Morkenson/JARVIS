@@ -65,6 +65,19 @@ jobs:
           Write-Host "✓ tts.json created from secret"
           Write-Host "File size: $((Get-Item tts.json).Length) bytes"
 
+      - name: Create Porcupine key file from secret
+        shell: pwsh
+        env:
+          PORCUPINE_ACCESS_KEY: ${{ secrets.PORCUPINE_ACCESS_KEY }}
+        run: |
+          if (-not $env:PORCUPINE_ACCESS_KEY) {
+            Write-Host "ERROR: PORCUPINE_ACCESS_KEY secret not found!"
+            Write-Host "Please add PORCUPINE_ACCESS_KEY secret to your repository settings."
+            exit 1
+          }
+          $env:PORCUPINE_ACCESS_KEY | Out-File -FilePath ".porcupine_key" -Encoding utf8 -NoNewline
+          Write-Host "✓ Porcupine key file created from secret"
+
       - name: Build executable (PyInstaller)
         run: |
           pyinstaller jarvis.spec --noconfirm --clean
