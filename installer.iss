@@ -39,6 +39,9 @@ Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createal
 Source: "tts.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "env.example"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
+Source: "version.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Updater.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "GUI\UpdateDialog.py"; DestDir: "{app}\GUI"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Jarvis"; Filename: "{app}\Jarvis.exe"

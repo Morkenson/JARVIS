@@ -11,8 +11,84 @@ import VoiceRecognition.WakeDetection
 from GUI.Visualizer import start_visualizer
 from GUI.Onboarding import start_onboarding_ui
 
+# Add updater import
+try:
+    import Updater
+    from GUI.UpdateDialog import show_update_dialog
+    UPDATER_AVAILABLE = True
+except ImportError as e:
+    UPDATER_AVAILABLE = False
+    print(f"[Warning] Updater module not available: {e}")
+
+
+def check_for_updates():
+    """Check for updates (blocking) and handle update if available
+    
+    Returns:
+        True if update was installed (app should exit), False otherwise
+    """
+    if not UPDATER_AVAILABLE:
+        return False
+    
+    # Skip update check in test mode
+    if '--test-setup' in sys.argv or '--demo-setup' in sys.argv:
+        return False
+    
+    try:
+        # Configure your GitHub repository information here
+        # Or set GITHUB_REPO_OWNER and GITHUB_REPO_NAME in .env file
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        # CHANGE THESE to match your GitHub repository
+        repo_owner = os.getenv('GITHUB_REPO_OWNER', 'yourusername')  # Your GitHub username
+        repo_name = os.getenv('GITHUB_REPO_NAME', 'JARVIS')  # Your repository name
+        
+        print("[Updater] Checking for updates...")
+        
+        # Check for updates (don't auto-install yet)
+        update_info = Updater.check_and_update(
+            repo_owner=repo_owner,
+            repo_name=repo_name,
+            auto_install=False  # We'll handle installation after user confirms
+        )
+        
+        if update_info and update_info.get('available'):
+            print(f"[Updater] Update found! {update_info['current']} -> {update_info['latest']}")
+            
+            # Show update dialog
+            update_now = show_update_dialog(
+                current_version=update_info['current'],
+                latest_version=update_info['latest'],
+                release_notes=update_info.get('release_notes', '')
+            )
+            
+            if update_now:
+                print("[Updater] User chose to update now. Downloading and installing...")
+                # Download and install the update directly
+                if update_info.get('installer_url'):
+                    Updater.download_and_install_update(update_info['installer_url'])
+                    return True  # Update is being installed, app will exit
+            else:
+                print("[Updater] User chose to update later. Continuing with current version.")
+        else:
+            print("[Updater] You are running the latest version")
+            
+    except Exception as e:
+        print(f"[Updater] Error during update check: {e}")
+        # Continue with app launch even if update check fails
+    
+    return False  # No update installed, continue with app launch
+
 
 def main():
+    # Check for updates on launch (blocking - waits for check to complete)
+    # If update is installed, this will return True and we should exit
+    if check_for_updates():
+        # Update is being installed, the updater will exit the app
+        return
+    
     # Check for test setup flag
     test_setup = '--test-setup' in sys.argv or '--demo-setup' in sys.argv
     

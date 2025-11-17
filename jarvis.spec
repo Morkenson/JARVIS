@@ -58,6 +58,10 @@ a = Analysis(
         'threading',
         'SetupWizard',
         'pathlib',
+        'Updater',
+        'version',
+        'requests',
+        'GUI.UpdateDialog',
     ],
     hookspath=[],  # Removed to avoid conflicts with custom hook
     hooksconfig={},
